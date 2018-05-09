@@ -155,6 +155,9 @@ def setup():
     global labels
     global yvals
     
+    #Send the data to the LCA, 's' is the start character
+    ser.write('s' + datetime.now().strftime('%d,%m,%y,%H,%M,%S,'))
+    
     #Make the graph as long as the sample
     ax.set_xlim(0, lenvar)
     
