@@ -17,7 +17,7 @@ String filename = "00_DATA.CSV";
 
 // Thermocouple Analog Input Pins
 #define therm1		A0
-#define therm2    A1
+#define therm2      A1
 #define therm3		A2
 #define therm4		A3
 #define therm5 		A6
