@@ -127,7 +127,8 @@ def setup():
     global labels
     global yvals
     
-    ser.write(datetime.now().strftime('%d,%m,%y,%H,%M,%S,') + ('%d,' % period*1000))
+    #Send the data to the LCA, 'n' is the start character
+    ser.write('n' + datetime.now().strftime('%d,%m,%y,%H,%M,%S,') + '%d,' % (period*1000))
     
     #Make the graph as long as the sample
     ax.set_xlim(0, lenvar)
@@ -169,7 +170,7 @@ def updateWindow():
     global yvals
     global sheetrow
     
-    worksheet.write('A'+str(sheetrow+1), datetime.now().strftime('%H:%M:%S.%f')[:-4]) #Put the current time in the first column
+    worksheet.write('A'+str(sheetrow+1), datetime.now().strftime('%H:%M:%S')) #Put the current time in the first column
     xvals.append((sheetrow - 1)*period) #Log the current xval, based on the global sheetrow counter
     
     #Wait for the line from the LCA
@@ -283,9 +284,9 @@ def safe_exit():
     sys.exit(1)
 
 #Variables to store menu settings, with default values
-lenvar = 1
-freqvar = 1
-pathvar = ''
+lenvar = 20
+freqvar = 2
+pathvar = 'C:\Users\pionkecx1\Desktop'
 tempvar = 'C'
 
 #Running the menu class

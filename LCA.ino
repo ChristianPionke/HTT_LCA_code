@@ -7,16 +7,17 @@
 // setup() must be changed manually
 #define thermnum 	5
 
-// mills b/w entries
-int log_interval = 1000;  
+File logfile;
 
+// mills b/w entries
+int log_interval = 1000;
 
 // create new file name
 String filename = "00_DATA.CSV";
 
 // Thermocouple Analog Input Pins
 #define therm1		A0
-#define therm2    	A1
+#define therm2    A1
 #define therm3		A2
 #define therm4		A3
 #define therm5 		A6
@@ -28,7 +29,7 @@ RTC_DS1307 RTC;
 #define chipSelect  10
 
 // logging file
-File logfile;
+//File logfile;
 
 void error(char *str) {
   while (1);
@@ -39,11 +40,52 @@ String get2digit(int n) {
   return n < 10 ? "0" + String(n, DEC) : String(n, DEC);
 }
 
+// sets the RTC based on XBee data
+void xbeeWriteSettings(){
+
+  int day = Serial.readStringUntil(',').toInt();
+  int month = Serial.readStringUntil(',').toInt();
+  int year = Serial.readStringUntil(',').toInt();
+  int hour = Serial.readStringUntil(',').toInt();
+  int minute = Serial.readStringUntil(',').toInt();
+  int second = Serial.readStringUntil(',').toInt();
+  log_interval = Serial.readStringUntil(',').toInt();
+  
+  
+  RTC.adjust(DateTime(year, month, day, hour, minute, second));
+}
+
+// callback function for file timestamps
+void dateTime(uint16_t* date, uint16_t* time) {
+  DateTime now = RTC.now();
+  
+  // return date using FAT_DATE macro to format fields
+  *date = FAT_DATE(now.year(), now.month(), now.day());
+
+  // return time using FAT_TIME macro to format fields
+  *time = FAT_TIME(now.hour(), now.minute(), now.second());
+}
+
 void setup() {
   Serial.begin(9600);
   
   // ensure default chip select pin is set to output
   pinMode(chipSelect, OUTPUT);
+
+  Wire.begin();
+
+  RTC.begin();
+
+  if(!RTC.isrunning()){
+	while (1);
+  }
+  
+  // when the 'n' character is recieved, set the date, time, and loop delay
+  while(Serial.read() != 'n'){}
+  xbeeWriteSettings();
+
+  // set SD file date and time with the callback function
+  SdFile::dateTimeCallback(dateTime);
 
   // see if the card is present and can be initialized
   if (!SD.begin(chipSelect)) {
@@ -68,33 +110,18 @@ void setup() {
     while (1);
   }
 
-  Wire.begin();
-
-  RTC.begin();
-
-  if(!RTC.isrunning()){
-	while (1);
-  }
-  
-  //Takes time setting from python code: number of millis wait b/w data points
-  if(Serial.available() > 0){
-	  log_interval = Serial.read();
-  }
-
-  //Compares current time to compilation time, update RTC if necessary
-  DateTime now = RTC.now();
-  DateTime compiled = DateTime(__DATE__, __TIME__);
-  if (now.unixtime() < compiled.unixtime()){
-    //Serial.println("RTC isn't synched.");
-    RTC.adjust(DateTime(__DATE__, __TIME__));
-  }
-
   // Send data headings to SD logfile and XBee 
-  logfile.println("Time,Temp1,Temp2,Temp3,Temp4,Temp5,"+day+"/"+month+"/"+year);
+  logfile.println("Time,Temp1,Temp2,Temp3,Temp4,Temp5,");//+year+"/"+month+"/"+day);
   logfile.close();
 }
 
 void loop() {  
+
+  // if the LCA script is ran again, re-update the settings
+  if(Serial.read() == 'n'){
+    xbeeWriteSettings();
+  }
+  
   logfile = SD.open(filename, FILE_WRITE);
   DateTime now;
 
