@@ -194,7 +194,7 @@ def updateWindow():
     global yvals
     global sheetrow
     
-    worksheet.write(chr(65)+str(sheetrow+1), datetime.now().strftime('%H:%M:%S.%f')[:-4]) #Put the current time in the first column
+    worksheet.write(chr(65)+str(sheetrow+1), datetime.now().strftime('%H:%M:%S')) #Put the current time in the first column
     xvals.append((sheetrow - 1)*period) #Log the current xval, based on the global sheetrow counter
     
     avgvals = [0, 0, 1000] #avgvals[0] is max average, avgvals[1] is total average, avgvals[2] is min average
